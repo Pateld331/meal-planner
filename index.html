@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meal Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Instrument+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0e0e0e;--surface:#161616;--surface2:#1e1e1e;--border:#2a2a2a;--border2:#333;
+  --text:#f0ede8;--muted:#888;--muted2:#555;--accent:#d4a853;--accent-dim:rgba(212,168,83,0.12);
+  --green:#4caf82;--red:#e05252;--blue:#5b9bd5;--orange:#e07a3a;--purple:#9b72cf;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Instrument Sans',sans-serif;min-height:100vh;}
+.app{display:grid;grid-template-columns:260px 1fr;min-height:100vh;}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.main{overflow-y:auto;}
+.sidebar-header{padding:24px 20px 16px;border-bottom:1px solid var(--border);}
+.logo{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-0.5px;}
+.logo span{color:var(--accent);}
+.sidebar-subtitle{font-size:11px;color:var(--muted);margin-top:2px;letter-spacing:1px;text-transform:uppercase;}
+.nav{padding:12px 0;flex:1;}
+.nav-label{font-size:10px;letter-spacing:2px;color:var(--muted2);text-transform:uppercase;padding:8px 20px 4px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;font-size:13px;color:var(--muted);transition:all .15s;border-left:2px solid transparent;}
+.nav-item:hover{color:var(--text);background:var(--surface2);}
+.nav-item.active{color:var(--accent);background:var(--accent-dim);border-left-color:var(--accent);}
+.nav-icon{font-size:15px;width:20px;text-align:center;}
+.sidebar-stats{padding:16px 20px;border-top:1px solid var(--border);}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;}
+.stat-label{font-size:11px;color:var(--muted);}
+.stat-val{font-size:13px;font-weight:500;}
+.stat-val.good{color:var(--green);}
+.stat-val.warn{color:var(--accent);}
+.panel{display:none;padding:32px;}
+.panel.active{display:block;}
+.panel-title{font-family:'Syne',sans-serif;font-size:28px;font-weight:700;margin-bottom:4px;}
+.panel-sub{font-size:13px;color:var(--muted);margin-bottom:28px;}
+.slot-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:24px;}
+.slot-tab{padding:8px 16px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;font-family:'Instrument Sans',sans-serif;transition:all .15s;white-space:nowrap;}
+.slot-tab:hover{border-color:var(--accent);color:var(--accent);}
+.slot-tab.active{background:var(--accent);border-color:var(--accent);color:#000;font-weight:600;}
+.meals-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;}
+.meal-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:all .2s;}
+.meal-card:hover{border-color:var(--border2);transform:translateY(-1px);}
+.card-top{padding:14px 16px 10px;border-bottom:1px solid var(--border);}
+.card-title-row{display:flex;align-items:start;justify-content:space-between;gap:8px;margin-bottom:6px;}
+.card-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:600;line-height:1.3;flex:1;}
+.card-protein{font-size:13px;font-weight:600;color:var(--green);white-space:nowrap;}
+.cuisine-tag{display:inline-block;font-size:10px;font-weight:500;padding:2px 8px;border-radius:4px;letter-spacing:.5px;}
+.card-body{padding:10px 16px;}
+.card-items{font-size:12px;color:var(--muted);line-height:1.7;}
+.card-footer{display:flex;justify-content:space-between;align-items:center;padding:8px 16px;border-top:1px solid var(--border);}
+.card-kcal{font-size:11px;color:var(--muted2);}
+.card-time{font-size:11px;color:var(--muted2);}
+.card-btn-row{display:flex;gap:6px;padding:0 16px 12px;}
+.card-btn{flex:1;padding:7px 0;border-radius:6px;font-size:12px;font-family:'Instrument Sans',sans-serif;cursor:pointer;border:none;transition:all .15s;font-weight:500;}
+.btn-recipe{background:var(--surface2);color:var(--muted);border:1px solid var(--border2);}
+.btn-recipe:hover{color:var(--accent);border-color:var(--accent);}
+.btn-add{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(212,168,83,0.3);}
+.btn-add:hover{background:var(--accent);color:#000;}
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:28px;}
+.day-col{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.day-header{padding:10px 12px;background:var(--surface2);border-bottom:1px solid var(--border);text-align:center;}
+.day-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;}
+.day-type{font-size:10px;color:var(--muted);margin-top:1px;}
+.day-slots{padding:8px;display:flex;flex-direction:column;gap:6px;}
+.day-slot{background:var(--surface2);border:1px dashed var(--border2);border-radius:6px;padding:6px 8px;min-height:52px;display:flex;flex-direction:column;justify-content:center;cursor:pointer;transition:all .15s;}
+.day-slot:hover{border-color:var(--accent);}
+.day-slot.has-meal{border-style:solid;border-color:var(--border2);background:var(--surface);}
+.slot-type-label{font-size:9px;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;}
+.slot-meal-name{font-size:11px;color:var(--text);font-weight:500;line-height:1.3;}
+.slot-meal-protein{font-size:10px;color:var(--green);margin-top:1px;}
+.slot-empty-text{font-size:10px;color:var(--muted2);text-align:center;}
+.remove-btn{font-size:9px;color:var(--red);margin-top:3px;opacity:0;transition:opacity .15s;cursor:pointer;}
+.day-slot:hover .remove-btn{opacity:1;}
+.week-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px;}
+.wstat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;}
+.wstat-val{font-family:'Syne',sans-serif;font-size:24px;font-weight:700;color:var(--accent);}
+.wstat-label{font-size:11px;color:var(--muted);margin-top:4px;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:90%;max-width:680px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+.modal-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;}
+.modal-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;}
+.modal-body{overflow-y:auto;padding:20px 24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;}
+.modal-meal-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;cursor:pointer;transition:all .15s;}
+.modal-meal-card:hover{border-color:var(--accent);}
+.modal-meal-name{font-size:13px;font-weight:500;margin-bottom:4px;}
+.modal-meal-protein{font-size:12px;color:var(--green);}
+.modal-meal-kcal{font-size:11px;color:var(--muted);margin-top:2px;}
+.recipe-modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:92%;max-width:620px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;}
+.recipe-header{padding:20px 24px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.recipe-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:6px;}
+.recipe-meta{display:flex;gap:16px;flex-wrap:wrap;}
+.recipe-meta span{font-size:12px;color:var(--muted);}
+.recipe-meta strong{color:var(--green);}
+.recipe-body{overflow-y:auto;padding:20px 24px;}
+.recipe-section-title{font-size:11px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:10px;margin-top:20px;font-weight:600;}
+.recipe-section-title:first-child{margin-top:0;}
+.ingredient-list{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;margin-bottom:4px;}
+.ingredient-list li{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 12px;font-size:13px;display:flex;justify-content:space-between;gap:8px;}
+.ingredient-list li .qty{color:var(--muted);font-size:12px;white-space:nowrap;}
+.step-list{display:flex;flex-direction:column;gap:10px;}
+.step-item{display:flex;gap:12px;align-items:start;}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--accent-dim);border:1px solid rgba(212,168,83,0.3);color:var(--accent);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.step-text{font-size:13px;color:var(--muted);line-height:1.7;}
+.recipe-tip{background:var(--surface2);border-left:3px solid var(--accent);padding:12px 16px;border-radius:0 8px 8px 0;margin-top:16px;font-size:13px;color:var(--muted);line-height:1.7;}
+.serving-btn{width:32px;height:32px;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif;transition:all .15s;}
+.serving-btn:hover{border-color:var(--accent);color:var(--accent);}
+.active-serving{background:var(--accent)!important;border-color:var(--accent)!important;color:#000!important;}
+.recipe-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;}
+.grocery-section{margin-bottom:24px;}
+.grocery-section-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--accent);letter-spacing:.5px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.grocery-items{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px;}
+.grocery-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:13px;}
+.grocery-check{width:16px;height:16px;border:1px solid var(--border2);border-radius:3px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .15s;}
+.grocery-check.checked{background:var(--green);border-color:var(--green);color:#000;}
+.grocery-item.checked-item{opacity:.4;}
+.grocery-item .qty{font-size:11px;color:var(--muted);margin-left:auto;white-space:nowrap;}
+.empty-state{text-align:center;padding:48px 24px;color:var(--muted);}
+.empty-icon{font-size:32px;margin-bottom:12px;}
+.empty-text{font-size:14px;}
+.empty-sub{font-size:12px;color:var(--muted2);margin-top:4px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:8px;font-size:13px;font-family:'Instrument Sans',sans-serif;font-weight:500;cursor:pointer;border:none;transition:all .15s;}
+.btn-primary{background:var(--accent);color:#000;}
+.btn-primary:hover{background:#e8bc6a;}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border2);}
+.btn-ghost:hover{color:var(--text);background:var(--surface2);}
+.action-row{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+@media(max-width:900px){.app{grid-template-columns:1fr;}.sidebar{position:relative;height:auto;}.week-grid{grid-template-columns:repeat(3,1fr);}.week-stats{grid-template-columns:repeat(2,1fr);}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">MEAL <span>PLANNER</span></div>
+    <div class="sidebar-subtitle">Wedding Transformation</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-label">Navigate</div>
+    <div class="nav-item active" onclick="showPanel('library')"><span class="nav-icon">🍽</span> Meal Library</div>
+    <div class="nav-item" onclick="showPanel('planner')"><span class="nav-icon">📅</span> Week Planner</div>
+    <div class="nav-item" onclick="showPanel('grocery')"><span class="nav-icon">🛒</span> Grocery List</div>
+  </nav>
+  <div class="sidebar-stats">
+    <div class="nav-label" style="padding:0 0 8px;">Weekly targets</div>
+    <div class="stat-row"><span class="stat-label">Avg protein/day</span><span class="stat-val good" id="sb-protein">—</span></div>
+    <div class="stat-row"><span class="stat-label">Avg calories/day</span><span class="stat-val" id="sb-kcal">—</span></div>
+    <div class="stat-row"><span class="stat-label">Meals planned</span><span class="stat-val" id="sb-meals">0/35</span></div>
+    <div class="stat-row"><span class="stat-label">Grocery items</span><span class="stat-val warn" id="sb-grocery">0</span></div>
+  </div>
+</aside>
+<main class="main">
+  <div id="panel-library" class="panel active">
+    <div class="panel-title">Meal Library</div>
+    <div class="panel-sub">Click "View recipe" for full step-by-step instructions · Click "Add to week" to plan it</div>
+    <div class="slot-tabs" id="library-tabs">
+      <button class="slot-tab active" onclick="filterSlot('all',this)">All meals</button>
+      <button class="slot-tab" onclick="filterSlot('breakfast',this)">Breakfast</button>
+      <button class="slot-tab" onclick="filterSlot('lunch',this)">Lunch</button>
+      <button class="slot-tab" onclick="filterSlot('preswim',this)">Pre-swim snack</button>
+      <button class="slot-tab" onclick="filterSlot('postswim',this)">Post-swim dinner</button>
+      <button class="slot-tab" onclick="filterSlot('bed',this)">Before bed</button>
+    </div>
+    <div class="meals-grid" id="library-grid"></div>
+  </div>
+  <div id="panel-planner" class="panel">
+    <div class="panel-title">Week Planner</div>
+    <div class="panel-sub">Click any slot to assign a meal · Your schedule is already mapped in</div>
+    <div class="week-stats">
+      <div class="wstat"><div class="wstat-val" id="ws-protein">0g</div><div class="wstat-label">Avg protein / day</div></div>
+      <div class="wstat"><div class="wstat-val" id="ws-kcal">0</div><div class="wstat-label">Avg calories / day</div></div>
+      <div class="wstat"><div class="wstat-val" id="ws-meals">0</div><div class="wstat-label">Meals planned</div></div>
+      <div class="wstat"><div class="wstat-val" id="ws-complete">0%</div><div class="wstat-label">Week complete</div></div>
+    </div>
+    <div class="week-grid" id="week-grid"></div>
+    <div class="action-row">
+      <button class="btn btn-primary" onclick="showPanel('grocery');buildGrocery()">Generate grocery list →</button>
+      <button class="btn btn-ghost" onclick="clearWeek()">Clear week</button>
+    </div>
+  </div>
+  <div id="panel-grocery" class="panel">
+    <div class="panel-title">Grocery List</div>
+    <div class="panel-sub">Generated from your weekly meal plan · Check off items as you shop</div>
+    <div class="action-row">
+      <button class="btn btn-primary" onclick="buildGrocery()">↻ Refresh list</button>
+      <button class="btn btn-ghost" onclick="window.print()">🖨 Print</button>
+      <button class="btn btn-ghost" onclick="copyGrocery()">📋 Copy to clipboard</button>
+    </div>
+    <div id="grocery-content"><div class="empty-state"><div class="empty-icon">🛒</div><div class="empty-text">No meals planned yet</div><div class="empty-sub">Go to Week Planner and add meals first</div></div></div>
+  </div>
+</main>
+</div>
+
+<!-- PICKER MODAL -->
+<div class="modal-overlay" id="modal-picker">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="picker-title">Pick a meal</div><button class="modal-close" onclick="closePicker()">✕</button></div>
+    <div class="modal-body" id="picker-body"></div>
+  </div>
+</div>
+
+<!-- RECIPE MODAL -->
+<div class="modal-overlay" id="modal-recipe">
+  <div class="recipe-modal">
+    <div class="recipe-header">
+      <div class="recipe-title" id="recipe-title"></div>
+      <div class="recipe-meta" id="recipe-meta"></div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+        <span style="font-size:12px;color:var(--muted);">Servings:</span>
+        <div style="display:flex;gap:6px;">
+          <button class="serving-btn active-serving" id="srv-1" onclick="setServings(1)">1</button>
+          <button class="serving-btn" id="srv-2" onclick="setServings(2)">2</button>
+          <button class="serving-btn" id="srv-3" onclick="setServings(3)">3</button>
+          <button class="serving-btn" id="srv-4" onclick="setServings(4)">4</button>
+        </div>
+        <span style="font-size:12px;color:var(--muted2);" id="serving-note">For 1 person</span>
+      </div>
+    </div>
+    <div class="recipe-body" id="recipe-body"></div>
+    <div class="recipe-footer">
+      <button class="btn btn-primary" id="recipe-add-btn">Add to week →</button>
+      <button class="btn btn-ghost" onclick="closeRecipe()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CC={INDIAN:"#BA7517",AMERICAN:"#378ADD",MEDITERRANEAN:"#1D9E75",MEXICAN:"#E24B4A",ASIAN:"#888",ITALIAN:"#D85A30",STAPLE:"#9b72cf"};
+const SC={
+  breakfast:{label:"Breakfast",color:"#d4a853",abbr:"BF"},
+  lunch:{label:"Lunch",color:"#4caf82",abbr:"LU"},
+  preswim:{label:"Pre-swim",color:"#5b9bd5",abbr:"PS"},
+  postswim:{label:"Post-swim dinner",color:"#e07a3a",abbr:"PW"},
+  bed:{label:"Before bed",color:"#9b72cf",abbr:"BD"},
+};
+const DAYS=[
+  {name:"Mon",type:"Cook yourself",slots:["breakfast","lunch","preswim","postswim","bed"]},
+  {name:"Tue",type:"Cook yourself",slots:["breakfast","lunch","preswim","postswim","bed"]},
+  {name:"Wed",type:"Mom cooks dinner",slots:["breakfast","lunch","preswim","bed"]},
+  {name:"Thu",type:"Mom cooks dinner",slots:["breakfast","lunch","preswim","bed"]},
+  {name:"Fri",type:"Cook yourself",slots:["breakfast","lunch","preswim","postswim","bed"]},
+  {name:"Sat",type:"Flexible",slots:["breakfast","lunch","preswim","postswim","bed"]},
+  {name:"Sun",type:"Meal prep day",slots:["breakfast","lunch","bed"]},
+];
+
+const MEALS={
+breakfast:[
+  {id:"b1",title:"Classic protein bowl",cuisine:"AMERICAN",protein:47,kcal:520,time:"5 min",items:"Greek yogurt · Whey shake · Banana · Walnuts · Honey",
+   ingredients:{"Greek yogurt (Fage 2%)":"1 cup","Whey protein powder":"1 scoop","Banana":"1","Walnuts":"small handful","Honey":"drizzle"},
+   recipe:{steps:["Scoop Greek yogurt into a bowl.","Add 1 scoop whey protein powder directly into the yogurt. Stir vigorously until completely smooth with no clumps.","Slice banana on top.","Add a small handful of walnuts.","Drizzle honey over the top. Eat immediately."],tip:"Mix the protein into yogurt the night before and leave covered in the fridge — grab it straight at 6am. Fastest possible breakfast."}},
+  {id:"b2",title:"Masala chai oats",cuisine:"INDIAN",protein:32,kcal:480,time:"8 min",items:"Rolled oats · Chai-spiced milk · Whey protein · Cardamom + cinnamon · Almonds",
+   ingredients:{"Rolled oats":"½ cup","Milk (2%)":"1 cup","Whey protein powder":"1 scoop","Cardamom pods":"2 crushed","Cinnamon":"½ tsp","Tea bags":"1","Almonds":"handful","Honey":"optional"},
+   recipe:{steps:["Bring milk to a simmer. Add tea bag, crushed cardamom pods, and cinnamon. Simmer 2 minutes. Remove tea bag.","Add rolled oats. Cook on medium-low, stirring occasionally, 4–5 minutes until thick.","Remove from heat. Let cool 90 seconds — critical, do not add protein to boiling liquid.","Stir in 1 scoop whey protein until fully mixed.","Pour into bowl, top with almonds and optional honey."],tip:"Make a double batch and refrigerate. Reheat with a splash of milk in the morning — cuts prep to 2 minutes."}},
+  {id:"b3",title:"Mango lassi smoothie",cuisine:"INDIAN",protein:40,kcal:490,time:"3 min",items:"Greek yogurt · Frozen mango · Whey protein · Milk · Cardamom",
+   ingredients:{"Greek yogurt (Fage 2%)":"1 cup","Frozen mango chunks":"½ cup","Whey protein powder":"1 scoop","Milk (2%)":"½ cup","Cardamom":"pinch","Honey":"optional"},
+   recipe:{steps:["Add all ingredients to a blender: Greek yogurt, frozen mango, whey protein, milk, and cardamom.","Blend on high for 30–45 seconds until completely smooth.","Taste — add honey if you want it sweeter. Blend 5 more seconds.","Pour and go. Can be taken in a shaker bottle."],tip:"Frozen mango is the key — keeps it thick and cold without ice. Buy a big bag and keep in the freezer. Zero morning prep needed."}},
+  {id:"b4",title:"Yogurt parfait",cuisine:"AMERICAN",protein:38,kcal:450,time:"3 min",items:"Greek yogurt · Granola · Mixed berries · Whey protein · Chia seeds",
+   ingredients:{"Greek yogurt (Fage 2%)":"1 cup","Granola":"¼ cup","Mixed berries":"½ cup","Whey protein powder":"1 scoop","Chia seeds":"1 tbsp"},
+   recipe:{steps:["Stir whey protein into Greek yogurt until smooth.","In a bowl or tall glass: layer half the yogurt, then half the berries, then half the granola.","Repeat layers.","Sprinkle chia seeds on top."],tip:"Build in a mason jar the night before for an instant grab-and-go. Chia seeds absorb liquid overnight and improve the texture significantly."}},
+  {id:"b5",title:"Protein overnight oats",cuisine:"AMERICAN",protein:42,kcal:510,time:"0 min morning",items:"Oats + milk + Greek yogurt + whey protein + chia seeds — prep night before",
+   ingredients:{"Rolled oats":"½ cup","Milk (2%)":"¾ cup","Greek yogurt (Fage 2%)":"¼ cup","Whey protein powder":"1 scoop","Chia seeds":"1 tbsp","Banana or berries":"for topping"},
+   recipe:{steps:["The night before: combine oats, milk, Greek yogurt, whey protein, and chia seeds in a mason jar.","Stir well so protein powder is fully incorporated — no clumps.","Seal and refrigerate overnight (at least 6 hours).","Morning: take from fridge, stir once, top with sliced banana or berries. Eat cold."],tip:"Make 4–5 jars Sunday night. Breakfast is locked for the entire work week with zero morning effort. Stays fresh 5 days in the fridge."}},
+  {id:"b6",title:"Besan chilla + yogurt",cuisine:"INDIAN",protein:35,kcal:420,time:"12 min",items:"Chickpea flour pancakes · Onion + green chili + coriander · Greek yogurt side",
+   ingredients:{"Chickpea flour (besan)":"½ cup","Water":"½ cup","Onion":"¼ small finely diced","Green chili":"1 finely chopped","Fresh coriander":"small handful","Turmeric":"¼ tsp","Salt":"to taste","Oil":"1 tsp","Greek yogurt (Fage 2%)":"¾ cup","Whey protein powder":"1 scoop"},
+   recipe:{steps:["Mix besan, water, turmeric, salt, onion, green chili, and coriander in a bowl. Whisk until smooth batter — consistency of thin pancake batter.","Heat non-stick pan on medium. Add a few drops of oil.","Pour a ladleful of batter, spread into a thin circle.","Cook 2–3 min until edges lift and surface looks dry. Flip, cook 1–2 more minutes.","Meanwhile, stir whey protein into Greek yogurt until smooth.","Serve chillas with protein yogurt on the side for dipping."],tip:"High-protein breakfast that feels like a real meal. Refrigerate leftover batter up to 2 days — stir before using. Great for when you want something savory."}},
+  {id:"b7",title:"Banana peanut butter shake",cuisine:"AMERICAN",protein:44,kcal:530,time:"3 min",items:"Whey protein · Banana · Peanut butter · Milk · Ice · Almonds alongside",
+   ingredients:{"Whey protein powder":"1 scoop","Banana":"1 (frozen is best)","Peanut butter":"2 tbsp","Milk (2%)":"1 cup","Ice":"handful","Almonds":"small handful"},
+   recipe:{steps:["Add milk, banana, peanut butter, and whey protein to blender.","Add a handful of ice.","Blend on high 30–45 seconds until smooth and creamy.","Pour into a large glass. Eat almonds alongside for extra fat and nutrients."],tip:"Freeze overripe bananas in advance — peel, break in half, freeze in a bag. Makes the shake thicker, colder, and sweeter than fresh bananas."}},
+  {id:"b8",title:"Mediterranean yogurt plate",cuisine:"MEDITERRANEAN",protein:36,kcal:460,time:"5 min",items:"Greek yogurt · Cucumber · Walnuts + almonds · Olive oil · Whole wheat pita",
+   ingredients:{"Greek yogurt (Fage 2%)":"1 cup","Cucumber":"½ sliced","Walnuts":"small handful","Almonds":"small handful","Olive oil":"1 tbsp","Za'atar or dried oregano":"½ tsp","Whole wheat pita":"1 small","Whey protein powder":"1 scoop"},
+   recipe:{steps:["Stir whey protein into Greek yogurt until smooth.","Spread yogurt on a plate.","Drizzle olive oil over the top. Sprinkle za'atar or oregano.","Arrange cucumber slices around the plate.","Add nuts on top.","Toast pita directly on a gas flame 30 seconds per side, or in toaster.","Dip pita into yogurt as you eat."],tip:"Za'atar is available at any Middle Eastern grocery or Amazon. It completely transforms plain yogurt. This savory breakfast is the best option when you are tired of sweet."}},
+  {id:"b9",title:"Warm turmeric milk oats",cuisine:"INDIAN",protein:30,kcal:440,time:"8 min",items:"Oats in turmeric milk · Whey protein · Medjool dates · Almonds",
+   ingredients:{"Rolled oats":"½ cup","Milk (2%)":"1 cup","Turmeric":"½ tsp","Black pepper":"pinch","Medjool dates":"2 pitted and chopped","Almonds":"handful","Whey protein powder":"1 scoop","Cardamom":"optional pinch"},
+   recipe:{steps:["Heat milk in a pot with turmeric, black pepper, and cardamom. Bring to a gentle simmer.","Add oats. Cook on medium, stirring, for 4–5 minutes.","Remove from heat. Let cool 90 seconds.","Stir in whey protein powder completely.","Pour into bowl. Top with chopped dates and almonds."],tip:"Black pepper activates curcumin in turmeric and increases absorption dramatically. Just a pinch. The dates provide natural sweetness with no added sugar."}},
+  {id:"b10",title:"Savory Greek yogurt bowl",cuisine:"MEDITERRANEAN",protein:38,kcal:400,time:"5 min",items:"Greek yogurt · Za'atar + olive oil · Cherry tomatoes · Cucumber · Pita chips",
+   ingredients:{"Greek yogurt (Fage 2%)":"1 cup","Za'atar":"1 tsp","Olive oil":"1 tbsp","Cherry tomatoes":"½ cup halved","Cucumber":"½ diced","Pita chips":"small handful","Whey protein powder":"1 scoop","Salt and pepper":"to taste"},
+   recipe:{steps:["Stir whey protein into Greek yogurt until completely smooth. Season with a pinch of salt.","Spread into a wide bowl.","Drizzle olive oil across the top. Sprinkle za'atar evenly.","Add cherry tomatoes and diced cucumber.","Add pita chips around the edge for scooping."],tip:"The most underrated breakfast in the plan. Feels like a real meal, takes 5 minutes, genuinely delicious. Za'atar and olive oil on yogurt is a classic Middle Eastern combination."}},
+],
+lunch:[
+  {id:"l1",title:"Paneer + dal + quinoa bowl",cuisine:"INDIAN",protein:57,kcal:620,time:"10 min (reheat)",items:"Grilled paneer · Dal tadka · Quinoa · Raita · Pickle",
+   ingredients:{"Paneer":"150g","Moong or toor dal":"½ cup dry","Quinoa":"¾ cup dry","Plain yogurt":"¼ cup","Cottage cheese":"2 tbsp","Cumin seeds":"1 tsp","Turmeric":"½ tsp","Ghee":"1 tsp","Garlic":"2 cloves","Indian pickle":"1 tsp"},
+   recipe:{steps:["SUNDAY PREP — Dal: Rinse dal. Cook with 1.5 cups water, turmeric, and salt until soft (15 min in pot). Temper: heat ghee, add cumin seeds until they splutter, add minced garlic 30 sec, pour over dal.","SUNDAY PREP — Quinoa: Rinse 3 cups dry. Cook 1:2 water ratio, boil then simmer 12 min covered, fluff with fork. Stores 5 days.","SUNDAY PREP — Paneer: Cut into cubes or slabs. Season with salt, cumin, turmeric. Grill in non-stick pan with 1 tsp oil on medium-high, 2–3 min per side until golden. Refrigerate airtight.","LUNCHTIME: Microwave paneer and dal 2 min. Scoop quinoa.","Raita: stir cottage cheese into plain yogurt, add cumin powder and salt.","Assemble: quinoa base, dal over, paneer on top, raita on side, pickle on side."],tip:"This single bowl hits 57g protein. Sunday prep means 5 weekday lunches are ready in 10 minutes each. The dal tadka temper is what makes it taste restaurant-quality — do not skip it."}},
+  {id:"l2",title:"Chana masala bowl",cuisine:"INDIAN",protein:52,kcal:580,time:"10 min (reheat)",items:"Chana masala · Brown rice · Raita · Red onion + lemon · Paneer",
+   ingredients:{"Chickpeas (canned)":"1 can 15oz","Brown rice":"¾ cup dry","Tomatoes":"2 diced","Onion":"1 diced","Garlic":"3 cloves minced","Ginger":"1 inch grated","Chana masala spice":"2 tbsp","Oil":"1 tbsp","Plain yogurt":"¼ cup","Paneer":"100g","Lemon":"1"},
+   recipe:{steps:["Heat oil. Add onion, cook 5 min until golden. Add garlic and ginger, cook 2 min.","Add tomatoes and chana masala spice. Cook 5 min until tomatoes break down.","Drain and rinse chickpeas. Add to pan. Mash about ¼ of them with a spoon to thicken the sauce. Cook 10 min on medium. Squeeze lemon at end.","Cook brown rice in parallel (1 cup dry = 2.5 cups cooked). Stores 5 days.","LUNCHTIME: Reheat chana masala and rice. Add raw diced paneer cubes to warm curry — they heat through without additional cooking.","Serve with plain yogurt and raw red onion slices."],tip:"Canned chickpeas are your biggest time-saver — always have them. Mashing some of the chickpeas is the professional trick for thick, restaurant-style sauce with no special ingredients."}},
+  {id:"l3",title:"High-protein burrito bowl",cuisine:"MEXICAN",protein:55,kcal:610,time:"10 min",items:"Black beans + pinto beans · Brown rice · Paneer · Greek yogurt · Salsa · Guac",
+   ingredients:{"Black beans (canned)":"½ can","Pinto beans (canned)":"½ can","Brown rice cooked":"¾ cup","Paneer":"100g cubed","Greek yogurt (Fage 2%)":"¼ cup","Salsa":"¼ cup","Avocado":"½","Shredded cheese":"30g","Lime":"1","Cumin + chili powder":"½ tsp each"},
+   recipe:{steps:["Drain and rinse both cans of beans. Add to a small pan with cumin, chili powder, salt, and 2 tbsp water. Cook on medium 3–4 min, mash half the beans lightly.","In the same pan, push beans aside, add paneer cubes, cook 2 min until slightly golden.","Mash avocado with lime juice and salt for quick guac.","Assemble: rice base, then beans and paneer, then cheese, salsa, Greek yogurt (as sour cream), guac on top.","Squeeze extra lime over everything."],tip:"Greek yogurt as sour cream is a 1:1 substitute with more protein and fewer calories. Nobody notices. Beans plus paneer is one of the strongest vegetarian protein combinations in the entire plan."}},
+  {id:"l4",title:"Mediterranean lentil bowl",cuisine:"MEDITERRANEAN",protein:48,kcal:560,time:"10 min (reheat)",items:"Green lentils · Quinoa · Roasted veggies · Feta · Tahini drizzle",
+   ingredients:{"Green lentils":"1 cup dry","Quinoa":"½ cup dry","Mixed vegetables (zucchini, bell pepper)":"2 cups","Feta cheese":"30g","Tahini":"2 tbsp","Lemon":"1 large","Fresh parsley":"handful","Olive oil":"2 tbsp","Garlic powder":"½ tsp"},
+   recipe:{steps:["SUNDAY PREP — Lentils: Rinse, add to pot with 2.5 cups water and ½ tsp salt. Boil, simmer 20 min until tender but not mushy. Drain excess water.","Roast vegetables: toss with olive oil, garlic powder, salt. Bake at 425°F for 20–25 min, toss once.","Cook quinoa simultaneously.","Tahini dressing: whisk 2 tbsp tahini + juice of 1 lemon + 2 tbsp water + salt until pourable.","LUNCHTIME: Reheat lentils and veg. Assemble: quinoa base, lentils, roasted veg, crumbled feta, parsley, tahini drizzle."],tip:"Tahini dressing is the star. Make a double or triple batch and refrigerate — drizzle on anything all week. Lasts 7 days in the fridge."}},
+  {id:"l5",title:"Tofu stir-fry + rice",cuisine:"ASIAN",protein:50,kcal:570,time:"15 min",items:"Firm tofu (pan-fried crispy) · Broccoli + snap peas + bell pepper · Soy + ginger sauce · Brown rice",
+   ingredients:{"Firm tofu":"200g","Broccoli florets":"1 cup","Snap peas":"1 cup","Bell pepper":"1 sliced","Brown rice cooked":"1 cup","Soy sauce":"3 tbsp","Fresh ginger":"1 inch grated","Garlic":"3 cloves minced","Sesame oil":"1 tsp","Sesame seeds":"1 tbsp","Oil":"1 tbsp"},
+   recipe:{steps:["Press tofu: wrap in paper towels, place a heavy pan on top for 10 minutes. This removes moisture and is what makes tofu crispy.","Cut pressed tofu into 1-inch cubes. Heat oil in a large pan on medium-high. Add tofu in a single layer. Do not touch for 3 minutes. Flip and cook 2 more minutes until golden. Remove from pan.","In the same pan: add garlic and ginger, stir-fry 30 seconds. Add broccoli and snap peas, cook 3 min. Add bell pepper, cook 1 more min.","Mix soy sauce and sesame oil. Pour over vegetables. Add tofu back in. Toss everything, cook 1 minute.","Serve over brown rice. Top with sesame seeds."],tip:"Pressing tofu is the single most important upgrade to tofu cooking. Wet tofu steams and stays soft. Pressed tofu gets golden and almost meaty. Never skip this step."}},
+  {id:"l6",title:"Paneer tikka wrap",cuisine:"INDIAN",protein:52,kcal:590,time:"12 min",items:"Paneer tikka (marinated, broiled) · Whole wheat roti · Mint chutney · Onion + tomato",
+   ingredients:{"Paneer":"200g cubed","Plain yogurt":"¼ cup","Tikka masala spice":"2 tbsp","Lemon juice":"1 tbsp","Whole wheat roti":"2","Fresh mint":"handful","Fresh cilantro":"handful","Green chili":"1","Onion":"½ thinly sliced","Tomato":"1 sliced"},
+   recipe:{steps:["Marinate: Mix yogurt, tikka masala, lemon juice. Toss paneer cubes in marinade. Let sit minimum 15 min, ideally overnight in fridge.","Broil: Spread marinated paneer on foil-lined baking sheet. Broil on high, 4 inches from heat, 6–8 min until charred edges appear. Flip once halfway.","Mint chutney: Blend mint, cilantro, green chili, lemon juice, salt, and a splash of water. 30 seconds in blender.","Warm rotis over gas flame 15 seconds per side (or microwave 20 seconds).","Assemble: spread mint chutney on roti, add paneer tikka, raw onion, sliced tomato. Roll tightly."],tip:"Marinate paneer in tikka mixture overnight Sunday. Broil takes 8 minutes and gives you protein for all week. The charred edges are non-negotiable for authentic flavor."}},
+  {id:"l7",title:"Protein pasta e fagioli",cuisine:"ITALIAN",protein:45,kcal:600,time:"15 min",items:"Chickpea pasta · White beans · Tomato + garlic sauce · Parmesan",
+   ingredients:{"Chickpea pasta (Banza)":"2 oz dry","White beans (canned)":"1 can","Canned crushed tomatoes":"1 cup","Garlic":"4 cloves minced","Fresh basil":"handful","Parmesan cheese":"30g","Olive oil":"1 tbsp","Red chili flakes":"½ tsp"},
+   recipe:{steps:["Cook chickpea pasta per package directions (usually 7–9 min). Reserve ¼ cup pasta water before draining.","While pasta cooks: heat olive oil in a large pan. Add garlic and chili flakes, cook 1 min until fragrant.","Add crushed tomatoes, salt, pepper. Simmer 5 minutes.","Drain and add white beans. Mash some with a spoon to thicken sauce.","Drain pasta, add to sauce with a splash of pasta water. Toss to coat. Add most of the parmesan.","Top with fresh basil and remaining parmesan."],tip:"Chickpea pasta has double the protein of regular pasta. Banza is the best brand. The reserved pasta water starch is what creates silky, restaurant-quality sauce — never skip it."}},
+  {id:"l8",title:"Matar paneer + roti",cuisine:"INDIAN",protein:50,kcal:600,time:"10 min (reheat)",items:"Matar paneer · Whole wheat rotis · Raita · Side salad",
+   ingredients:{"Paneer":"200g cubed","Frozen peas":"1 cup","Tomatoes":"2 blended","Onion":"1 diced","Garlic":"3 cloves","Ginger":"1 inch","Heavy cream":"2 tbsp","Garam masala":"1 tsp","Cumin seeds":"1 tsp","Turmeric":"¼ tsp","Whole wheat roti":"2","Plain yogurt":"¼ cup"},
+   recipe:{steps:["Heat oil, add cumin seeds. When they splutter, add onion and cook until golden, 5 min.","Add garlic-ginger (blend or grate together), cook 2 min.","Add blended tomatoes. Cook 5 min until oil separates from the masala — this is your signal.","Add turmeric, garam masala, salt. Stir.","Add frozen peas and paneer cubes. Add ¼ cup water. Cover and simmer 8 min.","Stir in cream. Simmer 2 more minutes. Serve with roti and yogurt."],tip:"Blending the tomatoes gives you a smooth, rich restaurant-style sauce. The oil separating from the masala after cooking the tomatoes is the key signal — that is when you add the peas and paneer."}},
+  {id:"l9",title:"Thai peanut noodle bowl",cuisine:"ASIAN",protein:46,kcal:590,time:"15 min",items:"Soba noodles · Edamame · Tofu · Peanut + soy + lime sauce · Cabbage · Peanuts",
+   ingredients:{"Soba noodles":"2 oz dry","Frozen edamame shelled":"1 cup","Firm tofu":"150g cubed","Peanut butter":"3 tbsp","Soy sauce":"2 tbsp","Lime":"1 juiced","Sriracha":"1 tsp","Garlic":"1 clove minced","Sesame oil":"1 tsp","Cabbage shredded":"1 cup","Peanuts crushed":"2 tbsp"},
+   recipe:{steps:["Cook soba noodles per package (5–6 min). Rinse under cold water immediately after draining — prevents clumping.","Microwave frozen edamame 3 min. Set aside.","Pan-fry tofu cubes in 1 tsp oil on medium-high, 2–3 min per side until golden.","Peanut sauce: whisk peanut butter, soy sauce, lime juice, sriracha, garlic, and sesame oil. If too thick, add 1–2 tbsp warm water and whisk again.","Combine noodles, edamame, tofu, and cabbage in a large bowl. Pour peanut sauce over and toss.","Top with crushed peanuts."],tip:"Rinse soba noodles with cold water immediately after cooking — they stick together badly if not rinsed. This is the most commonly missed step. The peanut sauce is the hero — make a double batch and refrigerate all week."}},
+  {id:"l10",title:"Rajma bowl",cuisine:"INDIAN",protein:50,kcal:570,time:"10 min (reheat)",items:"Rajma (kidney bean curry) · Basmati rice · Raita · Red onion + lemon",
+   ingredients:{"Kidney beans (canned)":"1 can 15oz","Basmati rice":"¾ cup dry","Tomatoes":"2 blended","Onion":"1 finely diced","Garlic":"3 cloves","Ginger":"1 inch","Rajma masala":"2 tbsp","Oil":"1 tbsp","Plain yogurt":"¼ cup","Red onion":"¼ thinly sliced","Lemon":"1"},
+   recipe:{steps:["Heat oil in a heavy pot. Cook onion until deep golden, 7–8 min. Do not rush this — it is the base of all flavor.","Add garlic-ginger, cook 2 min. Add blended tomatoes, cook until oil separates (8 min).","Add rajma masala, stir 1 min. Drain and rinse kidney beans, add to pot.","Add 1 cup water. Simmer 15 min on medium. Mash ¼ of the beans to thicken. Taste and adjust salt.","Cook basmati: rinse until clear, 1:1.5 water ratio, boil, cover and simmer 10 min, rest 5 min.","Serve rajma over rice with yogurt, raw red onion, and lemon."],tip:"Rajma is best the next day — flavors develop overnight. Make a big batch Sunday and it tastes even better through Thursday. Properly caramelized onions cannot be rushed — this is what separates average from great rajma."}},
+  {id:"l11",title:"Greek salad + paneer",cuisine:"MEDITERRANEAN",protein:48,kcal:520,time:"10 min",items:"Romaine + cucumber + tomato + olives + red onion · Feta · Grilled paneer · Olive oil + lemon",
+   ingredients:{"Romaine lettuce":"2 cups chopped","Cucumber":"1 chunked","Cherry tomatoes":"½ cup halved","Kalamata olives":"¼ cup","Red onion":"¼ thinly sliced","Feta cheese":"30g crumbled","Paneer":"100g","Olive oil":"1 tbsp","Lemon":"1","Dried oregano":"½ tsp","Whole wheat pita":"1"},
+   recipe:{steps:["Grill paneer: cut into slabs, season with salt and oregano, cook in a dry non-stick pan on medium-high, 2–3 min per side until golden.","Chop all vegetables into chunky pieces — Greek salad is chunky, not finely chopped.","Combine romaine, cucumber, tomatoes, olives, and red onion in a large bowl.","Dressing: whisk olive oil, lemon juice, oregano, salt, and pepper.","Pour dressing over salad. Toss lightly.","Top with crumbled feta and sliced grilled paneer. Serve with warm pita."],tip:"Keep everything in big chunks — this is how Greek salad should be. Chunky vegetables hold the dressing differently and give satisfying texture. Kalamata olives not regular black olives — the brine makes a completely different flavor profile."}},
+  {id:"l12",title:"Cottage cheese power bowl",cuisine:"AMERICAN",protein:55,kcal:530,time:"5 min",items:"Cottage cheese · Roasted chickpeas · Cherry tomatoes · Cucumber · Everything bagel seasoning",
+   ingredients:{"Cottage cheese":"1.5 cups","Chickpeas (canned)":"½ can","Cherry tomatoes":"½ cup halved","Cucumber":"½ diced","Everything bagel seasoning":"1 tsp","Rice cakes":"2","Olive oil":"drizzle","Lemon":"½"},
+   recipe:{steps:["SUNDAY PREP — Roasted chickpeas: drain, rinse, and dry chickpeas thoroughly with paper towels (wet chickpeas will not crisp). Toss with olive oil, salt, paprika, cumin. Roast at 400°F for 25–30 min until crunchy. Cool completely, store loosely covered.","LUNCHTIME: Spoon cottage cheese into a bowl. Season with lemon, salt, pepper.","Arrange cherry tomatoes and cucumber around or on top.","Add roasted chickpeas for crunch.","Sprinkle everything bagel seasoning generously.","Serve with rice cakes for scooping."],tip:"Highest protein-to-calorie ratio lunch in the plan at 55g for 530 kcal. Zero cooking required at lunchtime if you prepped chickpeas Sunday. Everything bagel seasoning transforms plain cottage cheese — it is a genuine game-changer."}},
+],
+preswim:[
+  {id:"ps1",title:"Cottage cheese + rice cakes",cuisine:"AMERICAN",protein:20,kcal:280,time:"2 min",items:"Cottage cheese · Rice cakes · Banana",
+   ingredients:{"Cottage cheese":"½ cup","Rice cakes":"2","Banana":"1"},
+   recipe:{steps:["Scoop cottage cheese into a small bowl. Eat with rice cakes — spread or dip.","Eat banana alongside.","That is the entire recipe."],tip:"Eat 90 minutes before swimming. This portion of cottage cheese digests relatively quickly. The banana gives fast carbs for energy in the pool. Intentionally simple — this is a snack, not a meal."}},
+  {id:"ps2",title:"Yogurt + fruit bowl",cuisine:"AMERICAN",protein:17,kcal:260,time:"2 min",items:"Greek yogurt · Mixed berries or mango · Honey",
+   ingredients:{"Greek yogurt (Fage 2%)":"¾ cup","Mixed berries or frozen mango":"½ cup thawed","Honey":"drizzle"},
+   recipe:{steps:["Scoop yogurt into a bowl.","Top with berries or thawed mango.","Drizzle honey.","Eat slowly — do not rush before swimming."],tip:"Pre-portion fruit in the fridge during Sunday prep so this is genuinely 2 minutes. Thaw frozen mango overnight in the fridge."}},
+  {id:"ps3",title:"Dates + almond butter + milk",cuisine:"INDIAN",protein:14,kcal:300,time:"2 min",items:"Medjool dates · Almond butter · Glass of 2% milk",
+   ingredients:{"Medjool dates":"5 pitted","Almond butter":"1 tbsp","Milk (2%)":"1 cup"},
+   recipe:{steps:["Split dates open and stuff each one with a small amount of almond butter.","Pour a glass of cold milk.","Eat dates, drink milk."],tip:"Traditional pre-workout fuel in South Asian households. Natural sugars in dates hit bloodstream fast. Protein in milk digests more slowly. Perfect pre-swim energy combination that has worked for generations."}},
+  {id:"ps4",title:"Banana + whey shake",cuisine:"AMERICAN",protein:25,kcal:300,time:"2 min",items:"Whey protein in water or milk · Banana",
+   ingredients:{"Whey protein powder":"1 scoop","Water or milk (2%)":"1 cup","Banana":"1"},
+   recipe:{steps:["Add whey protein to shaker bottle with water or milk. Shake 20 seconds.","Eat banana alongside.","Drink shake."],tip:"Fastest pre-swim option in the plan. Use water instead of milk for faster digestion — milk slows absorption slightly. Eat 60–90 minutes before pool."}},
+  {id:"ps5",title:"Peanut butter toast",cuisine:"AMERICAN",protein:14,kcal:320,time:"3 min",items:"Whole wheat toast · Peanut butter · Sliced banana",
+   ingredients:{"Whole wheat bread":"2 slices","Peanut butter":"2 tbsp","Banana":"1 sliced"},
+   recipe:{steps:["Toast bread to desired doneness.","Spread 1 tbsp peanut butter on each slice.","Slice banana and layer on top.","Eat while toast is still warm."],tip:"Classic pre-workout carb plus protein combination. Keep portions at exactly 2 tbsp peanut butter — it is calorie dense. Eat 90 minutes before swim, not immediately before."}},
+  {id:"ps6",title:"Roasted chickpeas + fruit",cuisine:"MEDITERRANEAN",protein:18,kcal:310,time:"2 min",items:"Roasted spiced chickpeas (Sunday prep) · Apple or orange",
+   ingredients:{"Chickpeas (canned)":"½ can","Olive oil":"1 tsp","Cumin":"1 tsp","Paprika":"1 tsp","Salt":"½ tsp","Apple or orange":"1"},
+   recipe:{steps:["SUNDAY PREP: Drain, rinse, and completely dry chickpeas with paper towels. Toss with olive oil, cumin, paprika, salt.","Spread in a single layer on a baking sheet. Roast at 400°F for 25–30 min, shaking pan halfway, until crunchy throughout.","Cool completely before storing. Store loosely covered — airtight containers make them soft.","PRE-SWIM: Grab a portion of roasted chickpeas and an apple or orange. Done."],tip:"Make a large batch every Sunday. These are your best snack all week. Keep on the kitchen counter for grab-and-go. Lose crunch if sealed in an airtight container while still warm."}},
+  {id:"ps7",title:"Chaat-style yogurt bowl",cuisine:"INDIAN",protein:17,kcal:270,time:"5 min",items:"Greek yogurt · Roasted chickpeas · Chaat masala · Cumin · Pomegranate seeds",
+   ingredients:{"Greek yogurt (Fage 2%)":"¾ cup","Roasted chickpeas (Sunday prep)":"¼ cup","Chaat masala":"½ tsp","Cumin powder":"¼ tsp","Pomegranate seeds":"2 tbsp"},
+   recipe:{steps:["Spoon Greek yogurt into a bowl.","Sprinkle chaat masala and cumin powder on top.","Add roasted chickpeas for crunch.","Top with pomegranate seeds."],tip:"Chaat masala is what makes this extraordinary — tangy, spiced complexity that transforms plain yogurt instantly. Find it at any Indian grocery store. Lasts months in your spice cabinet."}},
+  {id:"ps8",title:"Edamame + rice cakes",cuisine:"ASIAN",protein:20,kcal:290,time:"3 min",items:"Frozen edamame · Sea salt · Rice cakes",
+   ingredients:{"Frozen shelled edamame":"1 cup","Sea salt":"pinch","Rice cakes":"2"},
+   recipe:{steps:["Pour frozen edamame into a microwave-safe bowl. Microwave 3 minutes on high.","Drain any water. Sprinkle generously with sea salt.","Eat with rice cakes on the side."],tip:"Edamame is one of the only complete plant proteins — contains all essential amino acids. Buy frozen shelled edamame in 4-lb bags from Costco for the best value."}},
+],
+postswim:[
+  {id:"pw1",title:"Paneer bhurji",cuisine:"INDIAN",protein:42,kcal:520,time:"10 min",items:"Crumbled paneer (200g) · Onion + tomato + green chili + spices · 2 rotis · Mint chutney",
+   ingredients:{"Paneer":"200g","Onion":"1 small finely diced","Tomato":"1 finely diced","Green chili":"1 minced","Cumin seeds":"1 tsp","Turmeric":"¼ tsp","Garam masala":"½ tsp","Coriander powder":"½ tsp","Oil":"1 tsp","Fresh cilantro":"handful","Whole wheat roti":"2","Lemon":"½"},
+   recipe:{steps:["Crumble paneer into rough medium-sized pieces with your hands — keep it chunky, not fine.","Heat oil in a non-stick pan on medium-high. Add cumin seeds. When they sizzle, add diced onion.","Cook onion 3–4 minutes until softened and lightly golden.","Add minced green chili, cook 30 seconds. Add diced tomato, cook 2 min until soft.","Add turmeric, coriander powder, garam masala, and salt. Stir 30 seconds.","Add crumbled paneer. Toss everything together. Cook 2–3 min until paneer is heated through and coated in spices.","Squeeze lemon over the top. Top with fresh cilantro. Serve with warm rotis."],tip:"Your go-to Mon/Tue/Fri post-swim meal. 42g protein in 10 minutes. Keep roti in the freezer — reheat directly from frozen in a pan 30 seconds per side. Keeping paneer chunks medium-sized prevents it from becoming dry."}},
+  {id:"pw2",title:"Yogurt chickpea bowl",cuisine:"INDIAN",protein:38,kcal:460,time:"3 min",items:"Greek yogurt · Roasted chickpeas · Cucumber + tomato · Chaat masala + lemon — zero cooking",
+   ingredients:{"Greek yogurt (Fage 2%)":"1 cup","Roasted chickpeas (Sunday prep)":"½ cup","Cucumber":"½ diced","Tomato":"1 diced","Chaat masala":"1 tsp","Cumin powder":"½ tsp","Lemon":"1"},
+   recipe:{steps:["Spoon Greek yogurt into a large bowl. Season with cumin powder and a pinch of salt.","Dice cucumber and tomato. Add to bowl.","Top with roasted chickpeas.","Sprinkle chaat masala generously. Squeeze lemon juice over everything.","Eat immediately — chickpeas stay crunchy for about 10 minutes before softening."],tip:"Zero cooking. 3 minutes. 38g protein. This is your laziest night's best friend. The roasted chickpeas are what make this a meal — prep them Sunday. Extra hungry? Stir in another ½ cup cottage cheese."}},
+  {id:"pw3",title:"Cottage cheese + lentil soup",cuisine:"AMERICAN",protein:40,kcal:450,time:"8 min",items:"Canned lentil soup · Cottage cheese · Rotis or whole grain bread",
+   ingredients:{"Lentil soup (canned)":"1 can","Cottage cheese":"1 cup","Whole wheat roti":"2","Black pepper":"to taste","Hot sauce":"optional"},
+   recipe:{steps:["Open can of lentil soup. Pour into a bowl or pot. Microwave 2 min or heat on stovetop 4 min.","Season with black pepper and hot sauce if desired.","Serve cottage cheese in a separate bowl alongside, or stir directly into warm soup.","Serve with warm rotis."],tip:"Keep 4–6 cans of lentil soup in the pantry always. This is your 'just got home from swimming at 9:15pm with zero energy' meal. Progresso lentil soup is solid. Amy's is better but pricier."}},
+  {id:"pw4",title:"Express saag paneer",cuisine:"INDIAN",protein:40,kcal:490,time:"12 min",items:"Frozen spinach + paneer · Garlic + cream + garam masala · One pan · 2 rotis",
+   ingredients:{"Paneer":"200g cubed","Frozen chopped spinach":"2 cups","Garlic":"3 cloves minced","Heavy cream":"2 tbsp","Garam masala":"1 tsp","Turmeric":"¼ tsp","Cumin seeds":"1 tsp","Ghee or oil":"1 tsp","Whole wheat roti":"2"},
+   recipe:{steps:["Microwave frozen spinach 3 min to thaw. Squeeze out excess water using a towel or press with a spoon in a strainer.","Heat ghee in a pan on medium-high. Add cumin seeds. Add garlic, cook 1 min.","Add thawed spinach, turmeric, salt. Cook 3 min stirring. If too dry, add 2 tbsp water.","Push spinach to the sides. Add paneer cubes in the center. Cook paneer 2 min without moving.","Add garam masala. Stir everything together. Add cream, mix. Cook 1–2 more minutes.","Serve with warm rotis."],tip:"Frozen spinach is the shortcut that makes this possible in 12 minutes. Fresh spinach would take 3 times longer. The 2 tbsp of cream at the end ties everything together — do not skip it, it will not break your calories."}},
+  {id:"pw5",title:"Protein pasta",cuisine:"ITALIAN",protein:45,kcal:560,time:"12 min",items:"Chickpea pasta · Jarred marinara + white beans · Parmesan · Basil",
+   ingredients:{"Chickpea pasta (Banza)":"2 oz dry","Marinara sauce (jarred)":"1 cup","White beans (canned)":"½ can","Parmesan cheese":"30g grated","Fresh basil":"handful","Olive oil":"1 tbsp","Red chili flakes":"½ tsp","Garlic powder":"½ tsp"},
+   recipe:{steps:["Boil salted water. Cook chickpea pasta per package (7–9 min). Reserve ¼ cup pasta water before draining.","While pasta cooks: heat olive oil in a pan. Add chili flakes and garlic powder, 30 seconds.","Add marinara sauce. Drain and add white beans. Mash some beans to thicken. Simmer 3 min.","Drain pasta, add to sauce with a splash of reserved pasta water. Toss to coat.","Top with grated parmesan and fresh basil."],tip:"Keep Banza chickpea pasta and jarred marinara as permanent pantry staples. This is a 12-minute post-swim meal that delivers 45g protein and tastes like actual Italian food. The pasta water is what creates silky sauce."}},
+  {id:"pw6",title:"Bean quesadilla",cuisine:"MEXICAN",protein:38,kcal:520,time:"10 min",items:"Whole wheat tortillas · Refried beans + cheese · Greek yogurt as sour cream · Salsa",
+   ingredients:{"Whole wheat tortillas (burrito size)":"2","Refried beans (canned)":"½ cup","Shredded Mexican cheese blend":"50g","Greek yogurt (Fage 2%)":"¼ cup","Salsa":"¼ cup","Cumin":"¼ tsp"},
+   recipe:{steps:["Mix cumin into refried beans.","Heat a large non-stick pan or griddle on medium.","Lay one tortilla flat. Spread refried beans on half. Add a generous layer of shredded cheese.","Fold tortilla in half. Add a light spray of oil or small pat of butter.","Cook 2–3 min until golden and crispy. Flip carefully. Cook another 2 min.","Make second quesadilla same way. Cut into wedges. Serve with Greek yogurt and salsa for dipping."],tip:"Medium heat and patience is the secret — do not flip too early or the cheese will not melt and the tortilla will not be crispy. Listen for the sizzle. Cook until cheese starts bubbling at the edges."}},
+  {id:"pw7",title:"Tofu fried rice",cuisine:"ASIAN",protein:40,kcal:530,time:"12 min",items:"Day-old brown rice · Crumbled tofu · Soy + sesame + garlic + ginger · Frozen veggies",
+   ingredients:{"Firm tofu":"200g","Brown rice (day-old cold)":"1.5 cups cooked","Soy sauce":"3 tbsp","Sesame oil":"1 tsp","Garlic":"3 cloves minced","Fresh ginger":"1 inch grated","Frozen mixed vegetables":"1 cup","Green onions":"2 stalks sliced","Oil":"1 tbsp"},
+   recipe:{steps:["Press and crumble tofu into small pieces — think scrambled egg texture.","Heat oil in a wok or large non-stick pan on HIGH heat. Add crumbled tofu. Spread flat, do not touch for 2–3 min until browned. Stir and repeat.","Push tofu to the sides. Add garlic and ginger to center, cook 30 seconds.","Add frozen vegetables. Stir-fry 2–3 min until heated.","Add cold day-old rice. Break up any clumps. Stir-fry everything together 3 min on high heat.","Add soy sauce and sesame oil. Toss until evenly coated. Top with green onions."],tip:"Day-old cold rice is mandatory for fried rice — fresh rice is too wet and becomes mushy. Meal-prep brown rice Sunday and refrigerate. Always cook fried rice on the highest heat your stove allows. This is what makes the difference."}},
+  {id:"pw8",title:"Dal khichdi",cuisine:"INDIAN",protein:35,kcal:490,time:"15 min",items:"Moong dal + rice + turmeric + ghee · Pressure cooker or Instant Pot · Raita",
+   ingredients:{"Moong dal (yellow split)":"½ cup","Basmati rice":"½ cup","Turmeric":"½ tsp","Ghee":"1 tsp","Cumin seeds":"1 tsp","Garlic":"2 cloves minced","Salt":"to taste","Water":"2.5 cups","Plain yogurt":"¼ cup"},
+   recipe:{steps:["Rinse moong dal and rice together until water runs clear.","INSTANT POT: Add dal, rice, water, turmeric, and salt. Seal lid. Cook High Pressure 6 minutes. Natural release 5 minutes, then quick release.","STOVETOP PRESSURE COOKER: Same ingredients. Cook on high until 2–3 whistles. Let pressure release naturally 10 min.","While khichdi cooks: heat ghee in a small pan. Add cumin seeds and minced garlic. Fry until cumin splutters and garlic is golden, about 1 min. Pour over cooked khichdi and stir.","Raita: season yogurt with cumin powder and salt.","Serve khichdi in a deep bowl with raita on the side."],tip:"Moong dal is the easiest legume to digest — ideal for late-night eating. Get an Instant Pot if you do not have one. It transforms Indian cooking speed and makes this a genuinely 15-minute meal."}},
+  {id:"pw9",title:"Greek wrap",cuisine:"MEDITERRANEAN",protein:38,kcal:490,time:"8 min",items:"Whole wheat wrap · Hummus · Paneer or feta · Cucumber + tomato + olives + red onion",
+   ingredients:{"Whole wheat wrap (large)":"1","Hummus":"3 tbsp","Paneer":"100g","Cucumber":"½ sliced","Tomato":"1 sliced","Kalamata olives":"¼ cup","Red onion":"¼ thinly sliced","Dried oregano":"½ tsp","Olive oil":"drizzle","Lemon":"½"},
+   recipe:{steps:["Grill paneer: cut into slabs, cook in a dry non-stick pan on medium-high, 2–3 min per side until golden.","Warm wrap in a dry pan 30 seconds per side, or microwave 15 seconds.","Spread hummus evenly across the entire wrap.","Layer: sliced grilled paneer, cucumber, tomato, olives, red onion.","Sprinkle dried oregano. Drizzle olive oil. Squeeze lemon.","Roll tightly, cut in half diagonally."],tip:"If you have leftover grilled paneer from lunch prep, this wrap takes 5 minutes total. The hummus acts as both a spread and additional protein. Do not skimp on the olives — they are what gives this the Mediterranean flavor that makes it feel complete."}},
+  {id:"pw10",title:"Miso soup + tofu + rice",cuisine:"ASIAN",protein:36,kcal:440,time:"10 min",items:"Miso paste + silken tofu + seaweed · Brown rice · Edamame",
+   ingredients:{"Miso paste (white or red)":"2 tbsp","Silken tofu":"150g cubed gently","Dried wakame seaweed":"1 tbsp","Brown rice (pre-cooked)":"1 cup","Frozen edamame":"½ cup","Green onions":"2 stalks sliced","Hot water":"1.5 cups"},
+   recipe:{steps:["Microwave edamame 3 min. Set aside.","Rehydrate wakame: add dried seaweed to a small bowl with cold water, let sit 5 min, drain.","Heat 1.5 cups water until just before boiling — not a rolling boil, which destroys miso probiotics.","Whisk miso paste into hot water until fully dissolved.","Gently add silken tofu cubes and drained seaweed to miso broth. Heat 1–2 min on low.","Microwave pre-cooked brown rice 90 seconds.","Serve miso soup alongside rice and edamame. Top with green onions."],tip:"Never boil miso — it destroys the beneficial probiotics. Whisk paste into hot-but-not-boiling water. This is a lighter post-swim meal, perfect when you want something warm and comforting but not heavy at 9:15pm."}},
+  {id:"pw11",title:"Flatbread pizza",cuisine:"AMERICAN",protein:42,kcal:510,time:"10 min",items:"Whole wheat naan · Tomato sauce · Cottage cheese + mozzarella · Roasted veggies",
+   ingredients:{"Whole wheat naan":"1 large","Tomato sauce":"¼ cup","Cottage cheese":"½ cup","Mozzarella cheese":"50g shredded","Mixed vegetables (bell pepper, zucchini, onion)":"1 cup","Olive oil":"drizzle","Italian seasoning":"1 tsp","Red chili flakes":"½ tsp"},
+   recipe:{steps:["Turn oven broiler to HIGH. Place oven rack 4–5 inches from broiler element.","Spread tomato sauce evenly over naan, leaving a small border.","Spoon cottage cheese in dollops over the sauce — it melts into creamy pockets.","Sprinkle shredded mozzarella on top.","Add thinly sliced vegetables.","Drizzle olive oil. Sprinkle Italian seasoning and chili flakes.","Broil 4–6 minutes until cheese is bubbly and naan edges are crispy. Watch carefully — broilers vary dramatically."],tip:"Cottage cheese on pizza melts into creamy pockets — much higher protein than mozzarella alone. Watch the broiler like a hawk: 4 minutes can turn to burned in under 60 seconds."}},
+  {id:"pw12",title:"Black bean tacos",cuisine:"MEXICAN",protein:36,kcal:500,time:"8 min",items:"Corn tortillas · Black beans · Cheese + salsa + Greek yogurt · Avocado",
+   ingredients:{"Corn tortillas":"3","Black beans (canned)":"½ can","Shredded cheese":"40g","Salsa":"¼ cup","Greek yogurt (Fage 2%)":"¼ cup","Avocado":"½","Lime":"1","Cumin":"½ tsp","Chili powder":"¼ tsp"},
+   recipe:{steps:["Drain and rinse black beans. Add to a small pan with cumin, chili powder, salt, and 2 tbsp water. Cook on medium 3–4 min. Mash half the beans.","Char corn tortillas directly over a gas flame for 15–20 seconds per side using tongs until charred in spots. Or microwave stacked with a damp paper towel 30 seconds.","Mash avocado with lime juice and salt.","Assemble tacos: beans, cheese, salsa, Greek yogurt, avocado mash.","Serve with extra lime wedges."],tip:"Charring corn tortillas directly on the gas flame takes 15 seconds and makes an enormous difference in flavor — this is what separates restaurant tacos from home tacos. Use tongs and do not walk away."}},
+],
+bed:[
+  {id:"bd1",title:"Classic casein shake",cuisine:"STAPLE",protein:25,kcal:150,time:"2 min",items:"Casein protein · Water or milk · 5g creatine · Magnesium glycinate",
+   ingredients:{"Casein protein powder":"1 scoop","Water or milk":"1 cup","Creatine monohydrate":"5g","Magnesium glycinate":"1 tablet"},
+   recipe:{steps:["Add casein and creatine to shaker bottle.","Add cold water or milk.","Shake vigorously 20–30 seconds. Casein is thicker than whey and takes more shaking.","Drink within 20–30 min of going to sleep.","Take magnesium glycinate tablet with the shake."],tip:"Casein thickens dramatically with milk — use less liquid for pudding texture, more for drinkable. Dymatize Elite Casein and ON Gold Standard Casein are the best tasting. Take this every single night without exception — it is the most important supplement in the plan."}},
+  {id:"bd2",title:"Casein + whole milk",cuisine:"STAPLE",protein:33,kcal:250,time:"2 min",items:"Casein shake with full milk · Use on heavy double-session days",
+   ingredients:{"Casein protein powder":"1 scoop","Whole milk":"1 cup","Creatine monohydrate":"5g"},
+   recipe:{steps:["Combine casein and creatine in shaker bottle.","Add 1 cup whole milk.","Shake well for 30 seconds. Drink slowly before bed."],tip:"Use on Mon/Tue/Fri double-session days (gym AM plus swim PM). Extra fat from whole milk slows digestion even further, providing amino acids for longer. Stick to the water version on rest days."}},
+  {id:"bd3",title:"Cottage cheese bowl",cuisine:"AMERICAN",protein:28,kcal:200,time:"2 min",items:"Cottage cheese · Cinnamon + stevia — biologically identical to casein powder",
+   ingredients:{"Cottage cheese":"1 cup","Cinnamon":"½ tsp","Stevia or honey":"to taste","Walnuts":"optional small handful"},
+   recipe:{steps:["Scoop cottage cheese into a small bowl.","Sprinkle cinnamon and sweeten with stevia or a small drizzle of honey.","Add optional walnuts for texture.","Eat slowly before bed."],tip:"Cottage cheese is approximately 80% casein protein — biologically identical to casein powder from a muscle-building standpoint. If you are tired of shakes, this is the perfect alternative. Tastes like a light dessert."}},
+  {id:"bd4",title:"Warm turmeric milk + casein",cuisine:"INDIAN",protein:27,kcal:220,time:"5 min",items:"Warm milk + turmeric + black pepper + honey · Casein stirred in after cooling",
+   ingredients:{"Milk (2%)":"½ cup","Turmeric":"½ tsp","Black pepper":"pinch","Honey":"1 tsp","Casein protein powder":"1 scoop","Cardamom":"optional pinch"},
+   recipe:{steps:["Warm milk in a small pot or microwave until hot but not boiling.","Stir in turmeric, black pepper, cardamom, and honey.","Let cool 2 minutes — important. Do not add protein to very hot liquid or it clumps.","Stir in casein protein powder until smooth.","Drink warm before bed."],tip:"Haldi doodh has been used in South Asian households for centuries as a recovery and sleep aid. The combination of anti-inflammatory turmeric, casein protein, and warm liquid before bed is genuinely excellent for overnight recovery."}},
+  {id:"bd5",title:"Greek yogurt casein pudding",cuisine:"AMERICAN",protein:38,kcal:280,time:"2 min",items:"Greek yogurt + half scoop casein stirred in — thickens into pudding texture",
+   ingredients:{"Greek yogurt (Fage 2%)":"½ cup","Casein protein powder":"½ scoop","Cinnamon":"¼ tsp","Berries":"optional"},
+   recipe:{steps:["Spoon Greek yogurt into a small bowl.","Add ½ scoop casein protein powder.","Stir vigorously until completely smooth — it will thicken noticeably into a mousse-like texture.","Sprinkle cinnamon on top. Add a few berries if desired.","Eat with a spoon as a dessert-style night snack."],tip:"Highest protein before-bed option at 38g. Tastes like a thick pudding or mousse — genuinely enjoyable. Combination of yogurt whey protein and casein creates a multi-phase protein release overnight. Best before-bed option if you can handle the extra calories."}},
+]};
+
+let weekPlan={},currentPickerSlot=null,checkedGrocery=new Set(),currentRecipeId=null,currentServings=1;
+
+function findMeal(id){for(const m of Object.values(MEALS)){const f=m.find(x=>x.id===id);if(f)return f;}return null;}
+
+function renderLibrary(slotFilter){
+  const grid=document.getElementById('library-grid');
+  grid.innerHTML='';
+  const all=[];
+  Object.entries(MEALS).forEach(([slot,meals])=>meals.forEach(m=>all.push({...m,slot})));
+  const filtered=slotFilter==='all'?all:all.filter(m=>m.slot===slotFilter);
+  filtered.forEach(m=>{
+    const c=CC[m.cuisine]||'#888';
+    const div=document.createElement('div');
+    div.className='meal-card';
+    div.innerHTML=`
+      <div class="card-top">
+        <div class="card-title-row"><div class="card-name">${m.title}</div><div class="card-protein">${m.protein}g</div></div>
+        <span class="cuisine-tag" style="background:${c}22;color:${c};">${m.cuisine}</span>
+        <span class="cuisine-tag" style="background:rgba(255,255,255,0.04);color:var(--muted);margin-left:4px;">${SC[m.slot].label}</span>
+      </div>
+      <div class="card-body"><div class="card-items">${m.items}</div></div>
+      <div class="card-footer"><span class="card-kcal">${m.kcal} kcal</span><span class="card-time">${m.time}</span></div>
+      <div class="card-btn-row">
+        <button class="card-btn btn-recipe" onclick="openRecipe('${m.id}')">📖 View recipe</button>
+        <button class="card-btn btn-add" onclick="openDayPicker('${m.id}','${m.slot}')">+ Add to week</button>
+      </div>`;
+    grid.appendChild(div);
+  });
+}
+
+function filterSlot(slot,btn){
+  document.querySelectorAll('#library-tabs .slot-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderLibrary(slot);
+}
+
+function openDayPicker(mealId,slot){
+  currentPickerSlot={mealId,slot,mode:'day'};
+  const body=document.getElementById('picker-body');
+  document.getElementById('picker-title').textContent=`Which day? — ${SC[slot].label}`;
+  body.style.cssText='padding:20px 24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;overflow-y:auto;';
+  body.innerHTML='';
+  DAYS.forEach(day=>{
+    if(!day.slots.includes(slot))return;
+    const key=`${day.name}-${slot}`;
+    const existing=weekPlan[key]?findMeal(weekPlan[key]):null;
+    const card=document.createElement('div');
+    card.className='modal-meal-card';
+    card.style.textAlign='center';
+    card.innerHTML=`<div class="modal-meal-name" style="font-size:16px;">${day.name}</div><div class="modal-meal-kcal">${day.type}</div>${existing?`<div class="modal-meal-protein" style="color:var(--red);font-size:11px;">Replaces: ${existing.title}</div>`:'<div class="modal-meal-protein">Available</div>'}`;
+    card.onclick=()=>{weekPlan[key]=mealId;closePicker();renderWeek();updateStats();};
+    body.appendChild(card);
+  });
+  document.getElementById('modal-picker').classList.add('open');
+}
+
+function scaleQty(qty, servings) {
+  if (servings === 1) return qty;
+  // Parse numbers and scale them
+  return qty.replace(/(\d+\.?\d*)/g, (match) => {
+    const num = parseFloat(match);
+    const scaled = num * servings;
+    // Return clean number — integer if whole, 1 decimal if not
+    return scaled % 1 === 0 ? scaled : parseFloat(scaled.toFixed(1));
+  });
+}
+
+function renderIngredients(m, servings) {
+  return Object.entries(m.ingredients).map(([item, qty]) =>
+    `<li><span>${item}</span><span class="qty">${scaleQty(qty, servings)}</span></li>`
+  ).join('');
+}
+
+function setServings(n) {
+  currentServings = n;
+  // Update buttons
+  [1,2,3,4].forEach(i => {
+    const btn = document.getElementById('srv-' + i);
+    if (btn) btn.className = 'serving-btn' + (i === n ? ' active-serving' : '');
+  });
+  const notes = ['For 1 person','For 2 people','For 3 people','For 4 people'];
+  const noteEl = document.getElementById('serving-note');
+  if (noteEl) noteEl.textContent = notes[n-1];
+  // Re-render ingredients only
+  if (currentRecipeId) {
+    const m = findMeal(currentRecipeId);
+    if (m) {
+      const ingEl = document.getElementById('recipe-ing-list');
+      if (ingEl) ingEl.innerHTML = renderIngredients(m, n);
+    }
+  }
+}
+
+function openRecipe(id){
+  currentRecipeId = id;
+  currentServings = 1;
+  const m=findMeal(id);
+  if(!m||!m.recipe)return;
+  document.getElementById('recipe-title').textContent=m.title;
+  const c=CC[m.cuisine]||'#888';
+  document.getElementById('recipe-meta').innerHTML=`
+    <span><strong>${m.protein}g protein</strong></span><span>${m.kcal} kcal</span><span>${m.time}</span>
+    <span style="background:${c}22;color:${c};padding:2px 8px;border-radius:4px;font-size:11px;">${m.cuisine}</span>`;
+  // Reset serving buttons
+  [1,2,3,4].forEach(i => {
+    const btn = document.getElementById('srv-' + i);
+    if (btn) btn.className = 'serving-btn' + (i === 1 ? ' active-serving' : '');
+  });
+  const noteEl = document.getElementById('serving-note');
+  if (noteEl) noteEl.textContent = 'For 1 person';
+  const body=document.getElementById('recipe-body');
+  const stepsHtml=m.recipe.steps.map((s,i)=>`<div class="step-item"><div class="step-num">${i+1}</div><div class="step-text">${s}</div></div>`).join('');
+  body.innerHTML=`
+    <div class="recipe-section-title">Ingredients</div>
+    <ul class="ingredient-list" id="recipe-ing-list">${renderIngredients(m, 1)}</ul>
+    <div class="recipe-section-title">Instructions</div>
+    <div class="step-list">${stepsHtml}</div>
+    ${m.recipe.tip?`<div class="recipe-tip"><strong>Pro tip:</strong> ${m.recipe.tip}</div>`:''}`;
+  document.getElementById('recipe-add-btn').onclick=()=>{closeRecipe();openDayPicker(m.id,m.slot);};
+  document.getElementById('modal-recipe').classList.add('open');
+}
+
+function closeRecipe(){document.getElementById('modal-recipe').classList.remove('open');}
+
+function renderWeek(){
+  const grid=document.getElementById('week-grid');
+  grid.innerHTML='';
+  DAYS.forEach((day)=>{
+    const col=document.createElement('div');
+    col.className='day-col';
+    let slotsHtml='';
+    day.slots.forEach(slot=>{
+      const key=`${day.name}-${slot}`;
+      const meal=weekPlan[key]?findMeal(weekPlan[key]):null;
+      const sc=SC[slot];
+      if(meal){
+        slotsHtml+=`<div class="day-slot has-meal" onclick="openSlotPicker('${day.name}','${slot}')">
+          <div class="slot-type-label" style="color:${sc.color}">${sc.abbr}</div>
+          <div class="slot-meal-name">${meal.title}</div>
+          <div class="slot-meal-protein">${meal.protein}g</div>
+          <div class="remove-btn" onclick="event.stopPropagation();removeMeal('${day.name}','${slot}')">✕ remove</div>
+        </div>`;
+      } else {
+        slotsHtml+=`<div class="day-slot" onclick="openSlotPicker('${day.name}','${slot}')">
+          <div class="slot-type-label" style="color:${sc.color}">${sc.abbr}</div>
+          <div class="slot-empty-text">+ add</div>
+        </div>`;
+      }
+    });
+    col.innerHTML=`<div class="day-header"><div class="day-name">${day.name}</div><div class="day-type">${day.type}</div></div><div class="day-slots">${slotsHtml}</div>`;
+    grid.appendChild(col);
+  });
+  updateStats();
+}
+
+function openSlotPicker(dayName,slot){
+  currentPickerSlot={dayName,slot,mode:'meal'};
+  const meals=MEALS[slot];
+  const body=document.getElementById('picker-body');
+  document.getElementById('picker-title').textContent=`${SC[slot].label} — ${dayName}`;
+  body.style.cssText='padding:20px 24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;overflow-y:auto;';
+  body.innerHTML='';
+  meals.forEach(m=>{
+    const c=CC[m.cuisine]||'#888';
+    const card=document.createElement('div');
+    card.className='modal-meal-card';
+    card.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:4px;">
+        <div class="modal-meal-name">${m.title}</div>
+        <span style="font-size:10px;padding:2px 7px;border-radius:4px;background:${c}22;color:${c};margin-left:8px;">${m.cuisine}</span>
+      </div>
+      <div class="modal-meal-protein">${m.protein}g protein · ${m.kcal} kcal</div>
+      <div class="modal-meal-kcal">${m.time}</div>
+      <div style="display:flex;gap:6px;margin-top:8px;">
+        <button style="flex:1;padding:5px;border-radius:5px;border:1px solid var(--border2);background:var(--surface);color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit;" onclick="event.stopPropagation();openRecipe('${m.id}')">📖 Recipe</button>
+        <button style="flex:1;padding:5px;border-radius:5px;border:none;background:var(--accent-dim);color:var(--accent);font-size:11px;cursor:pointer;font-weight:500;font-family:inherit;" onclick="assignMeal('${dayName}','${slot}','${m.id}')">Select →</button>
+      </div>`;
+    body.appendChild(card);
+  });
+  document.getElementById('modal-picker').classList.add('open');
+}
+
+function assignMeal(dayName,slot,mealId){weekPlan[`${dayName}-${slot}`]=mealId;closePicker();renderWeek();}
+function removeMeal(dayName,slot){delete weekPlan[`${dayName}-${slot}`];renderWeek();}
+function clearWeek(){if(confirm('Clear all meals from the week?')){weekPlan={};renderWeek();}}
+function closePicker(){document.getElementById('modal-picker').classList.remove('open');}
+
+function updateStats(){
+  const totalSlots=DAYS.reduce((a,d)=>a+d.slots.length,0);
+  const filled=Object.keys(weekPlan).length;
+  let totalP=0,totalK=0;
+  DAYS.forEach(d=>d.slots.forEach(s=>{const m=weekPlan[`${d.name}-${s}`]?findMeal(weekPlan[`${d.name}-${s}`]):null;if(m){totalP+=m.protein;totalK+=m.kcal;}}));
+  const avgP=filled?Math.round(totalP/7):0;
+  const avgK=filled?Math.round(totalK/7):0;
+  const pct=Math.round((filled/totalSlots)*100);
+  document.getElementById('ws-protein').textContent=avgP+'g';
+  document.getElementById('ws-kcal').textContent=avgK||0;
+  document.getElementById('ws-meals').textContent=filled;
+  document.getElementById('ws-complete').textContent=pct+'%';
+  document.getElementById('sb-protein').textContent=avgP?avgP+'g':'—';
+  document.getElementById('sb-kcal').textContent=avgK||'—';
+  document.getElementById('sb-meals').textContent=filled+'/'+totalSlots;
+  document.getElementById('sb-grocery').textContent=countGroceryItems();
+}
+
+const CATS={
+  "Dairy & Protein Powders":["greek yogurt","fage","cottage cheese","paneer","feta","mozzarella","shredded cheese","parmesan","milk","cream","yogurt","whey protein","casein protein","silken tofu","firm tofu"],
+  "Legumes & Grains":["dal","moong","toor","chickpeas","black beans","white beans","pinto beans","kidney beans","refried beans","lentil soup","lentils","quinoa","brown rice","basmati","rolled oats","soba","chickpea pasta","banza"],
+  "Produce":["banana","berries","mango","apple","orange","pomegranate","avocado","cherry tomatoes","tomatoes","cucumber","bell pepper","broccoli","snap peas","frozen peas","edamame","spinach","frozen mixed","onion","red onion","green chili","garlic","ginger","lemon","lime","mint","cilantro","parsley","basil","romaine","cabbage","green onions","zucchini","wakame","seaweed"],
+  "Pantry & Condiments":["peanut butter","almond butter","tahini","hummus","olive oil","sesame oil","ghee","soy sauce","miso paste","salsa","marinara","crushed tomatoes","tomato sauce","honey","stevia","peanuts","walnuts","almonds","sesame seeds","granola","chia seeds","rice cakes","pita chips","hot sauce","sriracha","pickle","achaar"],
+  "Spices & Seasonings":["turmeric","cumin","garam masala","cardamom","cinnamon","black pepper","chaat masala","tikka masala","rajma masala","chana masala","italian seasoning","za'atar","everything bagel","paprika","chili flakes","chili powder","coriander","oregano"],
+  "Bread & Wraps":["roti","bread","pita","tortilla","corn tortilla","naan","wrap"],
+  "Supplements":["creatine","magnesium glycinate","medjool dates"],
+};
+
+function buildGrocery(){
+  const allIng={};
+  Object.values(weekPlan).forEach(mealId=>{
+    const meal=findMeal(mealId);
+    if(!meal||!meal.ingredients)return;
+    Object.entries(meal.ingredients).forEach(([item,qty])=>{if(!allIng[item])allIng[item]=[];allIng[item].push(qty);});
+  });
+  const content=document.getElementById('grocery-content');
+  if(!Object.keys(allIng).length){content.innerHTML='<div class="empty-state"><div class="empty-icon">🛒</div><div class="empty-text">No meals planned yet</div><div class="empty-sub">Go to Week Planner and add meals first</div></div>';return;}
+  const categorized={};
+  [...Object.keys(CATS),"Other"].forEach(c=>categorized[c]=[]);
+  Object.entries(allIng).forEach(([item,qtys])=>{
+    let placed=false;
+    for(const[cat,kws]of Object.entries(CATS)){
+      if(kws.some(k=>item.toLowerCase().includes(k)||k.includes(item.toLowerCase().split('(')[0].trim()))){categorized[cat].push({item,qtys});placed=true;break;}
+    }
+    if(!placed)categorized["Other"].push({item,qtys});
+  });
+  content.innerHTML='';
+  [...Object.keys(CATS),"Other"].forEach(cat=>{
+    const items=categorized[cat];
+    if(!items||!items.length)return;
+    const sec=document.createElement('div');sec.className='grocery-section';
+    const gid='gc_'+cat.replace(/\W+/g,'_');
+    sec.innerHTML=`<div class="grocery-section-title">${cat}</div><div class="grocery-items" id="${gid}"></div>`;
+    content.appendChild(sec);
+    const grid=sec.querySelector('.grocery-items');
+    items.forEach(({item,qtys})=>{
+      const isChecked=checkedGrocery.has(item);
+      const div=document.createElement('div');div.className='grocery-item'+(isChecked?' checked-item':'');
+      const safe=item.replace(/'/g,"\\'");
+      const qd=[...new Set(qtys)].join(' / ');
+      div.innerHTML=`<div class="grocery-check ${isChecked?'checked':''}" onclick="toggleCheck('${safe}')">${isChecked?'✓':''}</div><span>${item}</span><span class="qty">${qd}</span>`;
+      grid.appendChild(div);
+    });
+  });
+  document.getElementById('sb-grocery').textContent=countGroceryItems();
+}
+
+function countGroceryItems(){const s=new Set();Object.values(weekPlan).forEach(id=>{const m=findMeal(id);if(m&&m.ingredients)Object.keys(m.ingredients).forEach(i=>s.add(i));});return s.size;}
+function toggleCheck(key){if(checkedGrocery.has(key))checkedGrocery.delete(key);else checkedGrocery.add(key);buildGrocery();}
+function copyGrocery(){
+  const allIng={};
+  Object.values(weekPlan).forEach(mealId=>{const m=findMeal(mealId);if(!m||!m.ingredients)return;Object.entries(m.ingredients).forEach(([item,qty])=>{if(!allIng[item])allIng[item]=[];allIng[item].push(qty);});});
+  const lines=Object.entries(allIng).map(([item,qtys])=>`- ${item}: ${[...new Set(qtys)].join(' / ')}`);
+  navigator.clipboard.writeText("MEAL PLANNER — GROCERY LIST\n\n"+lines.join('\n'));
+  alert('Copied to clipboard!');
+}
+
+function showPanel(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    if((id==='library'&&n.textContent.includes('Library'))||(id==='planner'&&n.textContent.includes('Planner'))||(id==='grocery'&&n.textContent.includes('Grocery')))n.classList.add('active');
+  });
+  if(id==='grocery')buildGrocery();
+}
+
+document.getElementById('modal-picker').addEventListener('click',function(e){if(e.target===this)closePicker();});
+document.getElementById('modal-recipe').addEventListener('click',function(e){if(e.target===this)closeRecipe();});
+
+renderLibrary('all');
+renderWeek();
+</script>
+</body>
+</html>
